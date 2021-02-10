@@ -1,9 +1,11 @@
 package com.atguigu.gulimall.product.service.impl;
 
+import com.atguigu.gulimall.product.entity.CategoryBrandRelationEntity;
+import com.atguigu.gulimall.product.service.CategoryBrandRelationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -15,10 +17,14 @@ import com.atguigu.common.utils.Query;
 import com.atguigu.gulimall.product.dao.CategoryDao;
 import com.atguigu.gulimall.product.entity.CategoryEntity;
 import com.atguigu.gulimall.product.service.CategoryService;
+import org.springframework.transaction.annotation.Transactional;
 
 
 @Service("categoryService")
 public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity> implements CategoryService {
+
+    @Autowired
+    private CategoryBrandRelationService categoryBrandRelationService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -56,6 +62,57 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         //TODO 判断是否有关联的数据
         baseMapper.deleteBatchIds(idList);
     }
+
+    /**
+     * 根据当前结点查询路径
+     * 优化成非递归
+     * @param attrGroupId
+     * @return
+     */
+    @Override
+    public Long[] findCatelogPath(Long attrGroupId) {
+        List<Long> path = new LinkedList<>();
+        path.add(0,attrGroupId);
+        CategoryEntity cur = baseMapper.selectById(attrGroupId);
+        while(cur.getParentCid()!=0){
+            cur = baseMapper.selectById(cur.getParentCid());
+            path.add(0,cur.getCatId());
+        }
+        return path.toArray(new Long[path.size()]);
+//        List<Long> path = new ArrayList<>();
+//        List<Long> parentPath = findParentPath(attrGroupId,path);
+//        Collections.reverse(parentPath);
+//        return parentPath.toArray(new Long[parentPath.size()]);
+    }
+
+    @Transactional
+    @Override
+    public void updateCascade(CategoryEntity category) {
+        this.updateById(category);
+        categoryBrandRelationService.updateCategory(category.getCatId(),category.getName());
+    }
+
+    /**
+     * 私有的递归方法
+     * 尾递归可以修改为非递归
+     * 该函数将自身和所有父节点加入路径
+     * @param catelogId 当前的id
+     * @param paths 路径用引用传参
+     * @return
+     */
+    private List<Long> findParentPath(Long catelogId,List<Long> paths){
+        //将当前id先加入路径
+        paths.add(catelogId);
+        CategoryEntity cur = this.getById(catelogId);
+        if(cur.getParentCid()!=0){
+            findParentPath(cur.getParentCid(),paths);
+        }
+        return paths;
+    }
+
+
+
+
 
     /**
      * 查询子结点并返回列表
