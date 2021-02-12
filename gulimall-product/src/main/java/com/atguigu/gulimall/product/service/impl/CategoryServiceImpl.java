@@ -66,14 +66,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     /**
      * 根据当前结点查询路径
      * 优化成非递归
-     * @param attrGroupId
+     * @param catelogId
      * @return
      */
     @Override
-    public Long[] findCatelogPath(Long attrGroupId) {
+    public Long[] findCatelogPath(Long catelogId) {
         List<Long> path = new LinkedList<>();
-        path.add(0,attrGroupId);
-        CategoryEntity cur = baseMapper.selectById(attrGroupId);
+        path.add(0,catelogId);
+        CategoryEntity cur = baseMapper.selectById(catelogId);
         while(cur.getParentCid()!=0){
             cur = baseMapper.selectById(cur.getParentCid());
             path.add(0,cur.getCatId());

@@ -3,6 +3,8 @@ package com.atguigu.gulimall.product.controller;
 import java.util.Arrays;
 import java.util.Map;
 
+import com.atguigu.gulimall.product.vo.AttrRespVo;
+import com.atguigu.gulimall.product.vo.AttrVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +17,7 @@ import com.atguigu.gulimall.product.service.AttrService;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 
+import javax.websocket.server.PathParam;
 
 
 /**
@@ -41,16 +44,25 @@ public class AttrController {
         return R.ok().put("page", page);
     }
 
+    ///product/attr/base/list/{catelogId}
+    @RequestMapping("/base/list/{catelogId}")
+    //@RequiresPermissions("product:attr:list")
+    public R queryBaseAttrPage(@RequestParam Map<String, Object> params,
+                  @PathVariable("catelogId")Long catelogId){
+        PageUtils page = attrService.queryBaseAttrPage(params,catelogId);
+        return R.ok().put("page", page);
+    }
 
+
+    ///product/attr/info/{attrId}
     /**
      * 信息
      */
     @RequestMapping("/info/{attrId}")
     //@RequiresPermissions("product:attr:info")
     public R info(@PathVariable("attrId") Long attrId){
-		AttrEntity attr = attrService.getById(attrId);
-
-        return R.ok().put("attr", attr);
+        AttrRespVo attrRespVo = attrService.getAttrInfo(attrId);
+        return R.ok().put("attr", attrRespVo);
     }
 
     /**
@@ -58,8 +70,8 @@ public class AttrController {
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:attr:save")
-    public R save(@RequestBody AttrEntity attr){
-		attrService.save(attr);
+    public R save(@RequestBody AttrVo attrVo){
+		attrService.save(attrVo);
 
         return R.ok();
     }
@@ -69,11 +81,12 @@ public class AttrController {
      */
     @RequestMapping("/update")
     //@RequiresPermissions("product:attr:update")
-    public R update(@RequestBody AttrEntity attr){
-		attrService.updateById(attr);
+    public R update(@RequestBody AttrVo attrVo){
+		attrService.updateAttr(attrVo);
 
         return R.ok();
     }
+
 
     /**
      * 删除
