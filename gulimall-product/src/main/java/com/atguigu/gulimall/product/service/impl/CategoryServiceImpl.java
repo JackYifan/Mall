@@ -93,6 +93,16 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     /**
+     * 获取所有一级分类
+     * @return
+     */
+    @Override
+    public List<CategoryEntity> getLevel1Categories() {
+        List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
+        return categoryEntities;
+    }
+
+    /**
      * 私有的递归方法
      * 尾递归可以修改为非递归
      * 该函数将自身和所有父节点加入路径

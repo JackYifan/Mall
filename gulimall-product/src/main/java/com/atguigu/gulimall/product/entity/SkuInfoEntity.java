@@ -10,7 +10,7 @@ import lombok.Data;
 
 /**
  * sku信息
- * 
+ *
  * @author wyf
  * @email 3190103178@zju.edu.cn
  * @date 2021-02-09 10:04:38
@@ -65,5 +65,6 @@ public class SkuInfoEntity implements Serializable {
 	 * 销量
 	 */
 	private Long saleCount;
+
 
 }
