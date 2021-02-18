@@ -16,6 +16,9 @@ spring:
     name: gulimall-product
   thymeleaf:
     cache: false
+  redis:
+    host: 192.168.91.128
+    port: 6379
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
@@ -28,9 +31,8 @@ server:
   port: 10002
 logging:
   level:
-    com.atguigu.gulimall: debug
+    com.atguigu.gulimall: error
 
 ribbon:
   ReadTimeout: 60000
   ConnectTimeout: 60000
-
