@@ -5,11 +5,6 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- * @AUTHOR: raymond
- * @DATETIME: 2020/5/16  09:59
- * DESCRIPTION:
- **/
 @Data
 public class SearchResult {
 

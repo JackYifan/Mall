@@ -17,7 +17,7 @@
     <div class="header_head_box">
         <b class="header_head_p">
             <div style="overflow: hidden">
-                <a href="http://catmall.com" class="header_head_p_a1" style="width:73px;">
+                <a href="http://gulimall.com" class="header_head_p_a1" style="width:73px;">
                     谷粒商城首页
                 </a>
                 <a href="#" class="header_head_p_a">
@@ -64,11 +64,11 @@
         </b>
         <ul>
             <li>
-                <a th:if="${session.loginUser == null}" href="http://auth.catmall.com/login.html" class="li_2">你好，请登录</a>
+                <a th:if="${session.loginUser == null}" href="http://auth.gulimall.com/login.html" class="li_2">你好，请登录</a>
                 <a th:if="${session.loginUser != null}">欢迎, [[${session.loginUser.nickname}]]</a>
             </li>
             <li>
-                <a th:if="${session.loginUser == null}" href="http://auth.catmall.com/register.html" style="color: red;">免费注册</a>
+                <a th:if="${session.loginUser == null}" href="http://auth.gulimall.com/register.html" style="color: red;">免费注册</a>
             </li>
             <span>|</span>
             <li>
@@ -400,7 +400,7 @@
 <!--搜索导航-->
 <div class="header_sous">
     <div class="logo">
-        <a href="http://catmall.com"><img src="/static/search/image/logo1.jpg" alt=""></a>
+        <a href="http://gulimall.com"><img src="/static/search/image/logo1.jpg" alt=""></a>
     </div>
     <div class="header_form">
         <input id="keyword_input" type="text"/>
@@ -839,7 +839,7 @@
                 </div>
 
                 <!--其他的所有需要展示的属性-->
-                <div class="JD_pre" th:each="attr:${result.attr}">
+                <div class="JD_pre" th:each="attr:${result.attrs}">
                     <div class="sl_key">
                         <span th:text="${attr.attrName}">屏幕尺寸：</span>
                     </div>
@@ -1173,7 +1173,7 @@
                                 <a href="#">关注</a>
                             </div>
                             <p class="da">
-                                <a th:href="|http://item.catmall.com/${product.skuId}.html|">
+                                <a th:href="|http://item.gulimall.com/${product.skuId}.html|">
                                     <img th:src="${product.skuImg}" class="dim">
                                 </a>
                             </p>
@@ -1688,7 +1688,7 @@
         </ol>
         <ol>
             <li>特色服务</li>
-            <li><a href="#" style="color: rgb(114, 114, 114);">夺宝岛</a>
+            <li><a href="#" style="color: rgb(114, 114, 114);">夺宝岛</a>hang'yi
             </li>
             <li><a href="#">DIY装机</a>
             </li>

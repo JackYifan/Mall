@@ -5,11 +5,7 @@ import lombok.ToString;
 
 import java.util.List;
 
-/**
- * @AUTHOR: raymond
- * @DATETIME: 2020/5/16  09:42
- * DESCRIPTION:
- **/
+//封装页面传来的所有查询条件
 @Data
 @ToString
 public class SearchParam {
