@@ -12,6 +12,8 @@ spring:
 
   application:
     name: gulimall-member
+  redis:
+    host: 192.168.91.128
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
