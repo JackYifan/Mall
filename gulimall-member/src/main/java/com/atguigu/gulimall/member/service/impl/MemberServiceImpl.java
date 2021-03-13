@@ -35,7 +35,6 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
     @Autowired
     private MemberLevelDao memberLevelDao;
 
-
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<MemberEntity> page = this.page(
@@ -69,6 +68,7 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
 
         entity.setUsername(vo.getUsername());
         entity.setMobile(vo.getPhone());
+        entity.setNickname(vo.getUsername());
         baseMapper.insert(entity);
     }
 

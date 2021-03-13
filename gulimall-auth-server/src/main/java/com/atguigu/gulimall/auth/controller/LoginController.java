@@ -4,6 +4,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.exception.BizCodeEnume;
 import com.atguigu.common.utils.R;
+import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
 import com.atguigu.gulimall.auth.feign.ThirdPartFeignService;
 import com.atguigu.gulimall.auth.vo.UserLoginVo;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -35,6 +37,21 @@ public class LoginController {
 
     @Autowired
     MemberFeignService memberFeignService ;
+
+    /**
+     * session中有用户信息直接返回首页
+     * @param session
+     * @return
+     */
+    @GetMapping("/login.html")
+    public String login(HttpSession session){
+        if(session.getAttribute(AuthServerConstant.LOGIN_USER)!=null){
+            return "redirect:http://gulimall.com";
+        }else{
+            return "login";
+        }
+
+    }
 
 
     @ResponseBody
@@ -116,11 +133,13 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String login(UserLoginVo vo,RedirectAttributes redirectAttributes){
+    public String login(UserLoginVo vo, RedirectAttributes redirectAttributes, HttpSession session){
         //传递的是k-v不是json
-        //TODO 远程调用验证账号密码是否正确
+        //远程调用验证账号密码是否正确
         R loginResult = memberFeignService.login(vo);
         if(loginResult.getCode()==0){
+            //将用户信息存到session中
+            session.setAttribute(AuthServerConstant.LOGIN_USER,loginResult.getData(new TypeReference<MemberResponseVo>(){}));
             //正确返回商城首页
             return "redirect:http://gulimall.com";
         }else{

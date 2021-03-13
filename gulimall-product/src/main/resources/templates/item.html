@@ -517,6 +517,7 @@
                             <span>￥</span>
                             <span th:text="${#numbers.formatDecimal(item.info.price, 3, 2)}">4499.00</span>
                         </li>
+
                         <li>
                             <a href="">
                                 预约说明
@@ -612,7 +613,6 @@
                                     [[${vals.attrValue}]]
                                 </a>
                             </dd>
-
                         </dl>
                     </div>
                 </div>
@@ -635,6 +635,12 @@
                         </div>
                     </div>
 
+
+                    <div class="box-btns-two">
+                        <a id="addToCartA" th:attr="skuId=${item.info.skuId}">
+                            加入购物车
+                        </a>
+                    </div>
 
                     <div class="box-btns-three">
                         <img src="/static/item/img/e4ed3606843f664591ff1f68f7fda12d.png" alt=""/> 分享

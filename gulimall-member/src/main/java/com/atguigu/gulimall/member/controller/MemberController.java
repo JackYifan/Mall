@@ -49,7 +49,7 @@ public class MemberController {
         //远程调用传递的是json所以使用@RequestBody
         MemberEntity entity = memberService.login(vo);
         if(entity!=null){
-            return R.ok();
+            return R.ok().put("data",entity);
         }else{
             return R.error(BizCodeEnume.USERNAME_EXIST_EXCEPTION.getCode(),BizCodeEnume.USERNAME_EXIST_EXCEPTION.getMsg());
         }

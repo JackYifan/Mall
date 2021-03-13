@@ -5,7 +5,7 @@ import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.utils.HttpUtils;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
-import com.atguigu.gulimall.auth.vo.MemberResponseVo;
+import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.auth.vo.SocialUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpResponse;
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class OAuthController {
      * @return
      */
     @GetMapping("/oauth2.0/weibo/success")
-    public String weibo(@RequestParam("code") String code) throws Exception {
+    public String weibo(@RequestParam("code") String code, HttpSession session) throws Exception {
         //&grant_type=&redirect_uri=YOUR_REGISTERED_REDIRECT_URI&code=CODE
         Map<String,String> querys = new HashMap<>();
         querys.put("client_id","4148058448");
@@ -54,6 +55,8 @@ public class OAuthController {
                 MemberResponseVo data = result.getData("data", new TypeReference<MemberResponseVo>() {
                 });
                 log.info("登录成功：用户{}",data.toString());
+                //TODO 登录成功后的操作
+                session.setAttribute("loginUser",data);
                 return "redirect:http://gulimall.com";
             }else{
                 //微博登录失败
