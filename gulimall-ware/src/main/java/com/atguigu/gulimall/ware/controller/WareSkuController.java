@@ -1,17 +1,16 @@
 package com.atguigu.gulimall.ware.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
 import com.atguigu.common.to.SkuHasStockVo;
+import com.atguigu.common.utils.PageUtils;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.ware.entity.WareSkuEntity;
+import com.atguigu.gulimall.ware.service.WareSkuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.atguigu.gulimall.ware.entity.WareSkuEntity;
-import com.atguigu.gulimall.ware.service.WareSkuService;
-import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.R;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -36,7 +35,6 @@ public class WareSkuController {
     @PostMapping("/hasstock")
     public R hasStock(@RequestBody List<Long> skuId){
         List<SkuHasStockVo> vos = wareSkuService.hasStock(skuId);
-
         return R.ok().setData(vos);
 
     }

@@ -5,8 +5,32 @@ spring:
   datasource:
     username: root
     password: root
-    url: jdbc:mysql://192.168.56.10:3306/gulimall_oms
-    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql:///gulimall_oms?serverTimezone=GMT%2B8&useSSL=false
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  rabbitmq:
+    host: 192.168.91.128
+    port: 5672
+    virtual-host: /
+    publisher-confirms: true  #发送端确认，到达broker
+    publisher-returns: true   #抵达队列确认
+    template:
+      mandatory: true
+    listener:
+      direct:
+        acknowledge-mode: manual #手动ACK,防宕机
+  thymeleaf:
+    cache: false
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+  application:
+    name: gulimall-order
+  session:
+    store-type: redis
+  redis:
+    host: 192.168.91.128
+
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:

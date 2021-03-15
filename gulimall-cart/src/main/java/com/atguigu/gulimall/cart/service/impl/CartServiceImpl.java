@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ public class CartServiceImpl implements CartService {
 
     @Autowired
     private ThreadPoolExecutor threadPoolExecutor;
+
 
     /**
      * 将num件skuId的商品加入购物车
@@ -148,6 +150,24 @@ public class CartServiceImpl implements CartService {
         cartOps.delete(skuId.toString());
     }
 
+    @Override
+    public List<CartItem> getCurrentUserCartItem() {
+        List<CartItem> cartItems = new ArrayList<>();
+        BoundHashOperations<String, Object, Object> cartOps = getCartOps();
+        List<Object> values = cartOps.values();
+        for(Object o : values){
+            String value =(String) o;
+            CartItem item = JSON.parseObject(value, CartItem.class);
+            if(item.getChecked()){
+                //因为商品价格可能更新，所以远程调用查询最新价格
+                BigDecimal price = productFeign.getPrice(item.getSkuId());
+                item.setPrice(price);
+                cartItems.add(item);
+            }
+        }
+        return cartItems;
+    }
+
     private void clearCart(String cartKey) {
         redisTemplate.delete(cartKey);
     }
@@ -174,7 +194,7 @@ public class CartServiceImpl implements CartService {
     private BoundHashOperations<String, Object, Object> getCartOps() {
         //计算cartKey
         UserInfoTO userInfoTO = CartInterceptor.threadLocal.get();
-        String cartKey = cartKey=(userInfoTO.getUserId()!=null)?CART_PREFIX+userInfoTO.getUserId():CART_PREFIX+userInfoTO.getUserKey();
+        String cartKey = (userInfoTO.getUserId()!=null)?CART_PREFIX+userInfoTO.getUserId():CART_PREFIX+userInfoTO.getUserKey();
         //绑定需要操作的hash
         return redisTemplate.boundHashOps(cartKey);
     }
