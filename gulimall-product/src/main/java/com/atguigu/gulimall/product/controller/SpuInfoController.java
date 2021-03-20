@@ -1,16 +1,15 @@
 package com.atguigu.gulimall.product.controller;
 
-import java.util.Arrays;
-import java.util.Map;
-
+import com.atguigu.common.utils.PageUtils;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.product.entity.SpuInfoEntity;
+import com.atguigu.gulimall.product.service.SpuInfoService;
 import com.atguigu.gulimall.product.vo.SpuSaveVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.atguigu.gulimall.product.entity.SpuInfoEntity;
-import com.atguigu.gulimall.product.service.SpuInfoService;
-import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.R;
+import java.util.Arrays;
+import java.util.Map;
 
 
 
@@ -26,6 +25,15 @@ import com.atguigu.common.utils.R;
 public class SpuInfoController {
     @Autowired
     private SpuInfoService spuInfoService;
+
+
+    @GetMapping("/skuid/{id}")
+    public R getSpuInfoBySkuId(@PathVariable("id")Long skuId){
+        SpuInfoEntity spuInfoEntity = spuInfoService.getSpuInfoBySkuId(skuId);
+        return R.ok().setData(spuInfoEntity);
+    }
+
+
 
     @PostMapping("/{spuId}/up")
     public R spuUp(@PathVariable("spuId")Long spuId){

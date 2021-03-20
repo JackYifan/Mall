@@ -1,10 +1,13 @@
 package com.atguigu.gulimall.ware.controller;
 
+import com.atguigu.common.exception.BizCodeEnume;
 import com.atguigu.common.to.SkuHasStockVo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.ware.entity.WareSkuEntity;
+import com.atguigu.gulimall.ware.exception.NoStockException;
 import com.atguigu.gulimall.ware.service.WareSkuService;
+import com.atguigu.gulimall.ware.vo.WareStockLockVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +30,22 @@ public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
 
+    /**
+     * 锁定库存
+     * @param wareStockLockVo
+     * @return
+     */
+    @PostMapping("/lock/order")
+    public R lockStock(@RequestBody WareStockLockVo wareStockLockVo){
+        try {
+            Boolean hasStocked =  wareSkuService.lockStock(wareStockLockVo);
+            return R.ok();
+        } catch (NoStockException e) {
+            return R.error(BizCodeEnume.NO_STOCK_EXCEPTION.getCode(),BizCodeEnume.NO_STOCK_EXCEPTION.getMsg());
+        }
+    }
+
+
 
     /**
      * 批量判断所有sku是否有库存
@@ -36,7 +55,6 @@ public class WareSkuController {
     public R hasStock(@RequestBody List<Long> skuId){
         List<SkuHasStockVo> vos = wareSkuService.hasStock(skuId);
         return R.ok().setData(vos);
-
     }
 
 

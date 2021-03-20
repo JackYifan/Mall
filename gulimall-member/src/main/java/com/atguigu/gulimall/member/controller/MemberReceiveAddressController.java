@@ -1,16 +1,15 @@
 package com.atguigu.gulimall.member.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
+import com.atguigu.common.utils.PageUtils;
+import com.atguigu.common.utils.R;
+import com.atguigu.gulimall.member.entity.MemberReceiveAddressEntity;
+import com.atguigu.gulimall.member.service.MemberReceiveAddressService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.atguigu.gulimall.member.entity.MemberReceiveAddressEntity;
-import com.atguigu.gulimall.member.service.MemberReceiveAddressService;
-import com.atguigu.common.utils.PageUtils;
-import com.atguigu.common.utils.R;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 
 
@@ -26,6 +25,19 @@ import com.atguigu.common.utils.R;
 public class MemberReceiveAddressController {
     @Autowired
     private MemberReceiveAddressService memberReceiveAddressService;
+
+    @GetMapping("/info/{id}")
+    public R addrInfo(@PathVariable("id") Long id){
+        MemberReceiveAddressEntity memberReceiveAddress = memberReceiveAddressService.getById(id);
+        return R.ok().put("memberReceiveAddress", memberReceiveAddress);
+
+    }
+
+
+    @GetMapping("/address/{addressId}")
+    public MemberReceiveAddressEntity getAddressById(@PathVariable("addressId")Long addressId){
+        return memberReceiveAddressService.getById(addressId);
+    }
 
 
     @GetMapping("{memberId}/addresses")

@@ -8,14 +8,14 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public class OrderConfirmVO {
+public class  OrderConfirmVo {
     @Getter
     @Setter
-    private List<MemberAddressVO> addresses;
+    private List<MemberAddressVo> addresses;
 
     @Getter
     @Setter
-    private List<OrderItemVO> items;
+    private List<OrderItemVo> items;
 
     @Getter
     @Setter
@@ -35,7 +35,7 @@ public class OrderConfirmVO {
     public Integer getCount() {
         Integer count = 0;
         if (!CollectionUtils.isEmpty(items)) {
-            for (OrderItemVO orderItemVO : items)
+            for (OrderItemVo orderItemVO : items)
                 count += orderItemVO.getCount();
         }
         return count;
@@ -45,7 +45,7 @@ public class OrderConfirmVO {
     public BigDecimal getTotal() {
         BigDecimal sum = new BigDecimal("0");
         if (!CollectionUtils.isEmpty(items)) {
-            for (OrderItemVO itemVO : items) {
+            for (OrderItemVo itemVO : items) {
                 BigDecimal multiply = itemVO.getPrice().multiply(new BigDecimal(itemVO.getCount().toString()));
                 sum = sum.add(multiply);
             }

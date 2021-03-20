@@ -6,7 +6,7 @@ import lombok.Data;
  * 用户地址信息
  */
 @Data
-public class MemberAddressVO {
+public class MemberAddressVo {
     private Long id;
     /**
      * member_id

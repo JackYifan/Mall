@@ -2,15 +2,15 @@ package com.atguigu.gulimall.order.entity;
 
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.math.BigDecimal;
-import java.io.Serializable;
-import java.util.Date;
 import lombok.Data;
+
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Date;
 
 /**
  * 订单
- * 
+ *
  * @author wyf
  * @email 3190103178@zju.edu.cn
  * @date 2021-02-17 11:08:16
