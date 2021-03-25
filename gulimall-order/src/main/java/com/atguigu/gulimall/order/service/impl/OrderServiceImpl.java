@@ -2,7 +2,9 @@ package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.constant.OrderConstant;
+import com.atguigu.common.enume.OrderStatusEnum;
 import com.atguigu.common.to.SkuHasStockVo;
+import com.atguigu.common.to.mq.OrderTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
@@ -10,7 +12,6 @@ import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
-import com.atguigu.gulimall.order.enume.OrderStatusEnum;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
 import com.atguigu.gulimall.order.feign.ProductFeignService;
@@ -18,13 +19,15 @@ import com.atguigu.gulimall.order.feign.WareFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
 import com.atguigu.gulimall.order.service.OrderItemService;
 import com.atguigu.gulimall.order.service.OrderService;
-import com.atguigu.gulimall.order.to.OrderTo;
+import com.atguigu.gulimall.order.to.OrderCreateTo;
 import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -41,6 +44,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
 
 
 @Service("orderService")
@@ -69,6 +73,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     @Autowired
     OrderItemService orderItemService;
 
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -79,6 +85,10 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         return new PageUtils(page);
     }
+
+
+
+
 
     /**
      * 返回订单的所有数据
@@ -150,7 +160,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             return responseVo;
         }
         //创建订单
-        OrderTo order = createOrder();
+        OrderCreateTo order = createOrder();
         //验价
         BigDecimal payAmount = order.getOrderEntity().getPayAmount();
         BigDecimal payPrice = orderSubmitVO.getPayPrice();
@@ -172,7 +182,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             wareStockLockVo.setOrderItemVos(orderItemVoList);
             R r = wareFeignService.lockStock(wareStockLockVo);
             if(r.getCode()==0){
+                //锁定库存成功
                 responseVo.setOrderEntity(order.getOrderEntity());
+                //出异常会回滚
+                //TODO　将订单创建成功的消息发到MQ中
+                rabbitTemplate.convertAndSend("order-event-exchange","order.create.order",order.getOrderEntity());
                 return responseVo;
             }else{
                 //锁定失败
@@ -185,11 +199,51 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         }
     }
 
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        OrderEntity orderEntity = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
+        return orderEntity;
+    }
+
+    /**
+     * 关闭订单
+     * @param orderEntity
+     */
+    @Override
+    public void closeOrder(OrderEntity orderEntity) {
+        //查询当前订单的状态
+        OrderEntity latestOrder = this.getById(orderEntity.getId());
+        if(latestOrder.getStatus() == OrderStatusEnum.CREATE_NEW.getCode()){
+            //订单只有在新建状态才能关闭，否则可能重复关闭
+            OrderEntity entity = new OrderEntity();
+            entity.setId(orderEntity.getId());
+            entity.setStatus(OrderStatusEnum.CANCLED.getCode());
+            this.updateById(entity);
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(latestOrder, orderTo);
+            //主动发给order-event-exchange解锁库存，若没有发送可能因为网络卡顿，2分钟后的被动解锁因为订单状态并不是Cancel而不能解锁库存
+            rabbitTemplate.convertAndSend("order-event-exchange","order.release.other", orderTo);
+        }
+    }
+
+    @Override
+    public PayVo getOrderPay(String orderSn) {
+        PayVo payVo = new PayVo();
+        OrderEntity orderEntity = this.getOrderByOrderSn(orderSn);
+        String total = orderEntity.getTotalAmount().setScale(2, BigDecimal.ROUND_UP).toString();
+        payVo.setTotal_amount(total);
+        payVo.setOut_trade_no(orderSn);
+        OrderItemEntity orderItem = orderItemService.getOne(new QueryWrapper<OrderItemEntity>().eq("order_sn", orderSn));
+        payVo.setSubject(orderItem.getSkuName());
+        payVo.setBody(orderItem.getSkuAttrsVals());
+        return payVo;
+    }
+
     /**
      * 保存订单中的所有数据
      * @param order
      */
-    private void saveOrder(OrderTo order) {
+    private void saveOrder(OrderCreateTo order) {
         //保存订单信息
         OrderEntity orderEntity = order.getOrderEntity();
         orderEntity.setModifyTime(new Date());
@@ -199,8 +253,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         orderItemService.saveBatch(orderItems);
     }
 
-    private OrderTo createOrder() {
-        OrderTo order = new OrderTo();
+    private OrderCreateTo createOrder() {
+        OrderCreateTo order = new OrderCreateTo();
         String orderSn = IdWorker.getTimeId(); //根据时间生成订单号
         OrderEntity orderEntity = buildOrder(orderSn); //创建订单
         order.setOrderEntity(orderEntity);

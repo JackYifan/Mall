@@ -1,4 +1,4 @@
-package com.atguigu.gulimall.order.enume;
+package com.atguigu.common.enume;
 
 /**
  * @Author Yifan Wu

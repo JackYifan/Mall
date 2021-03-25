@@ -12,7 +12,7 @@ import java.util.List;
  * Date on 2021/3/18  10:54
  */
 @Data
-public class OrderTo {
+public class OrderCreateTo {
     /**
      * 订单信息
      */
