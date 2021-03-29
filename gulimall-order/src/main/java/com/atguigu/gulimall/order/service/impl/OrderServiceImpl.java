@@ -12,6 +12,7 @@ import com.atguigu.common.vo.MemberResponseVo;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
+import com.atguigu.gulimall.order.entity.PaymentInfoEntity;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
 import com.atguigu.gulimall.order.feign.ProductFeignService;
@@ -19,6 +20,7 @@ import com.atguigu.gulimall.order.feign.WareFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
 import com.atguigu.gulimall.order.service.OrderItemService;
 import com.atguigu.gulimall.order.service.OrderService;
+import com.atguigu.gulimall.order.service.PaymentInfoService;
 import com.atguigu.gulimall.order.to.OrderCreateTo;
 import com.atguigu.gulimall.order.vo.*;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -75,6 +77,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Autowired
     RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    PaymentInfoService paymentInfoService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -240,6 +245,49 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     }
 
     /**
+     * 查询当前登录用户的所有订单
+     * @param params
+     * @return
+     */
+    @Override
+    public PageUtils queryPageWithItem(Map<String, Object> params) {
+        MemberResponseVo memberResponseVo = LoginUserInterceptor.threadLocal.get();//获取用户信息
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                new QueryWrapper<OrderEntity>().eq("member_id", memberResponseVo.getId()).orderByDesc("id")
+        ); //获取分页的订单信息
+        List<OrderEntity> orderEntityList = page.getRecords().stream().map(orderEntity -> {
+            List<OrderItemEntity> itemEntityList = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", orderEntity.getOrderSn()));
+            orderEntity.setItemEntities(itemEntityList);
+            return orderEntity;
+        }).collect(Collectors.toList());//为每个订单封装商品信息
+        page.setRecords(orderEntityList);
+        return new PageUtils(page);
+    }
+
+    /**
+     * 根据支付宝返回的信息保存支付信息
+     * @param vo
+     * @return
+     */
+    @Override
+    public String handlePayResult(PayAsyncVo vo) {
+        //保存支付信息
+        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
+        infoEntity.setAlipayTradeNo(vo.getTrade_no()); //交易id
+        infoEntity.setOrderSn(vo.getOut_trade_no()); //订单id
+        infoEntity.setPaymentStatus(vo.getTrade_status()); //支付状态
+        infoEntity.setCallbackTime(vo.getNotify_time());
+        paymentInfoService.save(infoEntity);
+        //修改订单状态 交易成功或者交易结束
+        if (vo.getTrade_status().equals("TRADE_SUCCESS") || vo.getTrade_status().equals("TRADE_FINISHED")) {
+            String outTradeNo = vo.getOut_trade_no();
+            this.baseMapper.updateOrderStatus(outTradeNo, OrderStatusEnum.PAYED.getCode());
+        }
+        return "success";
+    }
+
+    /**
      * 保存订单中的所有数据
      * @param order
      */
@@ -307,9 +355,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
      * @return
      */
     private OrderEntity buildOrder(String orderSn) {
+        MemberResponseVo memberResponseVo = LoginUserInterceptor.threadLocal.get();
         OrderEntity orderEntity = new OrderEntity();
         orderEntity.setOrderSn(orderSn);
         OrderSubmitVo orderSubmitVo = confirmThreadLocal.get();
+        orderEntity.setMemberId(memberResponseVo.getId());
         R getFareResult = wareFeignService.getFare(orderSubmitVo.getAddrId());
         FareVo fareVo = getFareResult.getData(new TypeReference<FareVo>() {
         });

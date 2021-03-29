@@ -18,6 +18,8 @@ spring:
     listener:
       direct:
         acknowledge-mode: manual #手动ACK,防宕机
+      simple:
+        acknowledge-mode: manual
   thymeleaf:
     cache: false
   cloud:
@@ -30,9 +32,12 @@ spring:
     store-type: redis
   redis:
     host: 192.168.91.128
+  mvc:
+    date-format: yyyy-MM-dd HH:mm:ss
 
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
+

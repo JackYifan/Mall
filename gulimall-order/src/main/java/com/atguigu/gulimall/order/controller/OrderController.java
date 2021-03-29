@@ -25,6 +25,13 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @PostMapping("/listWithItem")
+    public R listWithItem(@RequestBody Map<String,Object> params){
+        PageUtils page = orderService.queryPageWithItem(params);
+        return R.ok().put("page",page);
+    }
+
+
     @GetMapping("/status/{orderSn}")
     public R getOrderStatus(@PathVariable("orderSn") String orderSn){
         OrderEntity orderEntity = orderService.getOrderByOrderSn(orderSn);
